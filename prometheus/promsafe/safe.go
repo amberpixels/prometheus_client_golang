@@ -11,8 +11,96 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package promsafe provides safe labeling - strongly typed labels in prometheus metrics.
-// Enjoy promsafe as you wish!
+// Package promsafe provides a layer of type-safety for label management in Prometheus metrics.
+//
+// Promsafe introduces type-safe labels, ensuring that the labels used with
+// Prometheus metrics are explicitly defined and validated at compile-time. This
+// eliminates common runtime errors caused by mislabeling, such as typos or
+// incorrect label orders.
+//
+// The following example demonstrates how to create and use a CounterVec with
+// type-safe labels (compared to how it's done in a regular way):
+//
+//	package main
+//
+//	import (
+//		"strconv"
+//
+//		"github.com/prometheus/client_golang/prometheus"
+//		"github.com/prometheus/client_golang/prometheus/promsafe"
+//	)
+//
+//	// Original unsafe way (no type safety)
+//	func originalUnsafeWay() {
+//		counterVec := prometheus.NewCounterVec(
+//			prometheus.CounterOpts{
+//				Name: "http_requests_total",
+//				Help: "Total number of HTTP requests by status code and method.",
+//			},
+//			[]string{"code", "method"}, // Labels defined as raw strings
+//		)
+//
+//		// No compile-time checks; label order and types must be correct
+//      // You have to know which and how many labels are expected (in proper order)
+//		counterVec.WithLabelValues("200", "GET").Inc()
+//
+// 		// or you can use map, that is even more fragile
+//      counterVect.WithLabels(prometheus.Labels{"code": "200", "method": "GET"}).Inc()
+//	}
+//
+//	// Safe way (Quick implementation, reflect-based under-the-hood)
+//	type Labels1 struct {
+//		promsafe.StructLabelProvider
+//		Code   int
+//		Method string
+//	}
+//
+//	func safeReflectWay() {
+//		counterVec := promsafe.NewCounterVec[Labels1](prometheus.CounterOpts{
+//			Name: "http_requests_total_reflection",
+//			Help: "Total number of HTTP requests by status code and method (reflection-based).",
+//		})
+//
+//		// Compile-time safe and readable; Will be converted into properly ordered list: "200", "GET"
+//		counterVec.With(Labels1{Method: "GET", Code: 200}).Inc()
+//	}
+//
+//	// Safe way with manual implementation (no reflection overhead, as fast as original)
+//	type Labels2 struct {
+//		promsafe.StructLabelProvider
+//		Code   int
+//		Method string
+//	}
+//
+//	func (c Labels2) ToPrometheusLabels() prometheus.Labels {
+//		return prometheus.Labels{
+//			"code":   strconv.Itoa(c.Code), // Convert int to string
+//			"method": c.Method,
+//		}
+//	}
+//
+//	func (c Labels2) ToLabelNames() []string {
+//		return []string{"code", "method"}
+//	}
+//
+//	func safeManualWay() {
+//		counterVec := promsafe.NewCounterVec[Labels2](prometheus.CounterOpts{
+//			Name: "http_requests_total_custom",
+//			Help: "Total number of HTTP requests by status code and method (manual implementation).",
+//		})
+//		counterVec.With(Labels2{Code: 404, Method: "POST"}).Inc()
+//	}
+//
+// Promsafe also provides compatibility adapter for integration with Prometheus's
+// `promauto` package, ensuring seamless adoption while preserving type-safety.
+// Methods that cannot guarantee type safety, such as those using raw `[]string`
+// label values, are explicitly deprecated and will raise runtime errors.
+//
+// A separate package allows conservative users to entirely ignore it. And
+// whoever wants to use it will do so explicitly, with an opportunity to read
+// this warning.
+//
+// Enjoy promsafe as it's safe!
 package promsafe
 
 import (
@@ -91,3 +179,5 @@ func NewCounter(opts prometheus.CounterOpts) prometheus.Counter {
 func NewCounterFunc(opts prometheus.CounterOpts, function func() float64) prometheus.CounterFunc {
 	return prometheus.NewCounterFunc(opts, function)
 }
+
+// TODO: other methods (Gauge, Histogram, Summary, etc.)
