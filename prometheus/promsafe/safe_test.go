@@ -14,7 +14,9 @@
 package promsafe_test
 
 import (
+	"fmt"
 	"log"
+	"testing"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promsafe"
@@ -88,4 +90,72 @@ func ExampleNewCounterVecT_fast_safe_labels_provider() {
 	counter.Inc()
 
 	// Output:
+}
+
+// ====================
+// Benchmark Tests
+// ====================
+
+type TestLabels struct {
+	promsafe.StructLabelProvider
+	Label1 string
+	Label2 int
+	Label3 bool
+}
+
+type TestLabelsFast struct {
+	promsafe.StructLabelProvider
+	Label1 string
+	Label2 int
+	Label3 bool
+}
+
+func (t TestLabelsFast) ToPrometheusLabels() prometheus.Labels {
+	return prometheus.Labels{
+		"label1": t.Label1,
+		"label2": fmt.Sprintf("%d", t.Label2),
+		"label3": fmt.Sprintf("%t", t.Label3),
+	}
+}
+func (t TestLabelsFast) ToLabelNames() []string {
+	return []string{"label1", "label2", "label3"}
+}
+
+func BenchmarkCompareCreatingMetric(b *testing.B) {
+
+	// Note: on stage of creation metrics, Unique metric names are not required,
+	//       but let it be for consistency
+
+	b.Run("Prometheus NewCounterVec", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			uniqueMetricName := fmt.Sprintf("test_counter_prometheus_%d_%d", b.N, i)
+
+			_ = prometheus.NewCounterVec(prometheus.CounterOpts{
+				Name: uniqueMetricName,
+				Help: "A test counter created just using prometheus.NewCounterVec",
+			}, []string{"label1", "label2", "label3"})
+		}
+	})
+
+	b.Run("Promsafe (reflect) NewCounterVec", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			uniqueMetricName := fmt.Sprintf("test_counter_promsafe_%d_%d", b.N, i)
+
+			_ = promsafe.NewCounterVec[TestLabels](prometheus.CounterOpts{
+				Name: uniqueMetricName,
+				Help: "A test counter created using promauto.NewCounterVec",
+			})
+		}
+	})
+
+	b.Run("Promsafe (fast) NewCounterVec", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			uniqueMetricName := fmt.Sprintf("test_counter_promsafe_fast_%d_%d", b.N, i)
+
+			_ = promsafe.NewCounterVec[TestLabelsFast](prometheus.CounterOpts{
+				Name: uniqueMetricName,
+				Help: "A test counter created using promauto.NewCounterVec",
+			})
+		}
+	})
 }
