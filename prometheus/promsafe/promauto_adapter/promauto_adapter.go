@@ -1,4 +1,4 @@
-package promauto
+package promauto_adapter
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
@@ -6,7 +6,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promsafe"
 )
 
-// NewCounterVec behaves as promauto.NewCounterVec but with type-safe labels
+// NewCounterVec behaves as adapter-promauto.NewCounterVec but with type-safe labels
 func NewCounterVec[T promsafe.LabelsProviderMarker](opts prometheus.CounterOpts) *promsafe.CounterVec[T] {
 	//_ = promauto.NewCounterVec // keeping for reference
 
@@ -22,12 +22,12 @@ type Factory[T promsafe.LabelsProviderMarker] struct {
 	r prometheus.Registerer
 }
 
-// With behaves same as promauto.With but with type-safe labels
+// With behaves same as adapter-promauto.With but with type-safe labels
 func With[T promsafe.LabelsProviderMarker](r prometheus.Registerer) Factory[T] {
 	return Factory[T]{r: r}
 }
 
-// NewCounterVec behaves like promauto.NewCounterVec but with type-safe labels
+// NewCounterVec behaves like adapter-promauto.NewCounterVec but with type-safe labels
 func (f Factory[T]) NewCounterVec(opts prometheus.CounterOpts) *promsafe.CounterVec[T] {
 	c := NewCounterVec[T](opts)
 	if f.r != nil {
