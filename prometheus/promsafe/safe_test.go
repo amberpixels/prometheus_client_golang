@@ -17,13 +17,10 @@ import (
 	"log"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promsafe"
 )
 
-// Important: This is not a test file. These are only examples!
-//            These can be considered smoke tests, but nothing more.
-//            TODO: Write real tests
+// These are Examples that can be treated as basic smoke tests
 
 func ExampleNewCounterVecT_multiple_labels_manual() {
 	// Manually registering with multiple labels
@@ -37,7 +34,7 @@ func ExampleNewCounterVecT_multiple_labels_manual() {
 		ShouldNotBeUsed string `promsafe:"-"`
 	}
 
-	c := promsafe.NewCounterVecT[MyCounterLabels](prometheus.CounterOpts{
+	c := promsafe.NewCounterVec[MyCounterLabels](prometheus.CounterOpts{
 		Name: "items_counted_detailed",
 	})
 
@@ -51,95 +48,6 @@ func ExampleNewCounterVecT_multiple_labels_manual() {
 		EventType: "reservation", Success: true, Position: 1,
 	})
 	counter.Inc()
-
-	// Output:
-}
-
-func ExampleNewCounterVecT_promauto_migrated() {
-	// Examples on how to migrate from promauto to promsafe
-	// When promauto was using a custom factory with custom registry
-
-	myReg := prometheus.NewRegistry()
-
-	counterOpts := prometheus.CounterOpts{
-		Name: "items_counted_detailed_auto",
-	}
-
-	// Old unsafe code
-	// promauto.With(myReg).NewCounterVec(counterOpts, []string{"event_type", "source"})
-	// becomes:
-
-	type MyLabels struct {
-		promsafe.StructLabelProvider
-		EventType string
-		Source    string
-	}
-	c := promsafe.WithAuto[MyLabels](myReg).NewCounterVecT(counterOpts)
-
-	c.With(MyLabels{
-		EventType: "reservation", Source: "source1",
-	}).Inc()
-
-	// Output:
-}
-
-func ExampleNewCounterVecT_promauto_global_migrated() {
-	// Examples on how to migrate from promauto to promsafe
-	// when promauto public API was used (with default registry)
-
-	// Setup so every NewCounter* call will use default registry
-	// like promauto does
-	// Note: it actually accepts other registry to become a default one
-	promsafe.SetupGlobalPromauto()
-	defer func() {
-		// cleanup for other examples
-		promsafe.SetupGlobalPromauto(promauto.With(nil))
-	}()
-
-	counterOpts := prometheus.CounterOpts{
-		Name: "items_counted_detailed_auto_global",
-	}
-
-	// Old code:
-	//c := promauto.NewCounterVec(counterOpts, []string{"status", "source"})
-	//c.With(prometheus.Labels{
-	//	"status": "active",
-	//	"source": "source1",
-	//}).Inc()
-	// becomes:
-
-	type MyLabels struct {
-		promsafe.StructLabelProvider
-		Status string
-		Source string
-	}
-	c := promsafe.NewCounterVecT[*MyLabels](counterOpts)
-
-	c.With(&MyLabels{
-		Status: "active", Source: "source1",
-	}).Inc()
-
-	// Output:
-}
-
-func ExampleNewCounterVecT_pointer_to_labels_promauto() {
-	// It's possible to use pointer to labels struct
-	myReg := prometheus.NewRegistry()
-
-	counterOpts := prometheus.CounterOpts{
-		Name: "items_counted_detailed_ptr",
-	}
-
-	type MyLabels struct {
-		promsafe.StructLabelProvider
-		EventType string
-		Source    string
-	}
-	c := promsafe.WithAuto[*MyLabels](myReg).NewCounterVecT(counterOpts)
-
-	c.With(&MyLabels{
-		EventType: "reservation", Source: "source1",
-	}).Inc()
 
 	// Output:
 }
@@ -162,36 +70,22 @@ func (f FastMyLabels) ToLabelNames() []string {
 }
 
 func ExampleNewCounterVecT_fast_safe_labels_provider() {
-	// It's possible to use pointer to labels struct
-	myReg := prometheus.NewRegistry()
+	// Note: fast labels provider has a drawback: they can't be declared as inline structs
+	//       as we need methods
 
-	counterOpts := prometheus.CounterOpts{
-		Name: "items_counted_fast",
-	}
-
-	c := promsafe.WithAuto[FastMyLabels](myReg).NewCounterVecT(counterOpts)
-
-	c.With(FastMyLabels{
-		EventType: "reservation", Source: "source1",
-	}).Inc()
-
-	// Output:
-}
-
-func ExampleNewCounterVecT_single_label_manual() {
-	// Manually registering with a single label
-	// Example of usage of shorthand: no structs no generics, but one string only
-
-	c := promsafe.NewCounterVecT1(prometheus.CounterOpts{
-		Name: "items_counted_by_status",
-	}, "status")
+	c := promsafe.NewCounterVec[FastMyLabels](prometheus.CounterOpts{
+		Name: "items_counted_detailed_fast",
+	})
 
 	// Manually register the counter
 	if err := prometheus.Register(c.Unsafe()); err != nil {
 		log.Fatal("could not register: ", err.Error())
 	}
 
-	c.With("active").Inc()
+	counter := c.With(FastMyLabels{
+		EventType: "reservation", Source: "source1",
+	})
+	counter.Inc()
 
 	// Output:
 }
