@@ -27,6 +27,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strconv"
 	"sync"
 	"testing"
 	"time"
@@ -361,7 +362,7 @@ collected metric "broken_metric" { label:<name:"foo" value:"bar" > label:<name:"
 			},
 			out: output{
 				headers: map[string]string{
-					"Content-Type": `text/plain; version=0.0.4; charset=utf-8; escaping=values`,
+					"Content-Type": `text/plain; version=0.0.4; charset=utf-8; escaping=underscores`,
 				},
 				body: []byte{},
 			},
@@ -372,7 +373,7 @@ collected metric "broken_metric" { label:<name:"foo" value:"bar" > label:<name:"
 			},
 			out: output{
 				headers: map[string]string{
-					"Content-Type": `text/plain; version=0.0.4; charset=utf-8; escaping=values`,
+					"Content-Type": `text/plain; version=0.0.4; charset=utf-8; escaping=underscores`,
 				},
 				body: []byte{},
 			},
@@ -383,7 +384,7 @@ collected metric "broken_metric" { label:<name:"foo" value:"bar" > label:<name:"
 			},
 			out: output{
 				headers: map[string]string{
-					"Content-Type": `text/plain; version=0.0.4; charset=utf-8; escaping=values`,
+					"Content-Type": `text/plain; version=0.0.4; charset=utf-8; escaping=underscores`,
 				},
 				body: []byte{},
 			},
@@ -394,7 +395,7 @@ collected metric "broken_metric" { label:<name:"foo" value:"bar" > label:<name:"
 			},
 			out: output{
 				headers: map[string]string{
-					"Content-Type": `application/vnd.google.protobuf; proto=io.prometheus.client.MetricFamily; encoding=delimited; escaping=values`,
+					"Content-Type": `application/vnd.google.protobuf; proto=io.prometheus.client.MetricFamily; encoding=delimited; escaping=underscores`,
 				},
 				body: []byte{},
 			},
@@ -405,7 +406,7 @@ collected metric "broken_metric" { label:<name:"foo" value:"bar" > label:<name:"
 			},
 			out: output{
 				headers: map[string]string{
-					"Content-Type": `text/plain; version=0.0.4; charset=utf-8; escaping=values`,
+					"Content-Type": `text/plain; version=0.0.4; charset=utf-8; escaping=underscores`,
 				},
 				body: expectedMetricFamilyAsText,
 			},
@@ -417,7 +418,7 @@ collected metric "broken_metric" { label:<name:"foo" value:"bar" > label:<name:"
 			},
 			out: output{
 				headers: map[string]string{
-					"Content-Type": `application/vnd.google.protobuf; proto=io.prometheus.client.MetricFamily; encoding=delimited; escaping=values`,
+					"Content-Type": `application/vnd.google.protobuf; proto=io.prometheus.client.MetricFamily; encoding=delimited; escaping=underscores`,
 				},
 				body: expectedMetricFamilyAsBytes,
 			},
@@ -429,7 +430,7 @@ collected metric "broken_metric" { label:<name:"foo" value:"bar" > label:<name:"
 			},
 			out: output{
 				headers: map[string]string{
-					"Content-Type": `text/plain; version=0.0.4; charset=utf-8; escaping=values`,
+					"Content-Type": `text/plain; version=0.0.4; charset=utf-8; escaping=underscores`,
 				},
 				body: externalMetricFamilyAsText,
 			},
@@ -441,7 +442,7 @@ collected metric "broken_metric" { label:<name:"foo" value:"bar" > label:<name:"
 			},
 			out: output{
 				headers: map[string]string{
-					"Content-Type": `application/vnd.google.protobuf; proto=io.prometheus.client.MetricFamily; encoding=delimited; escaping=values`,
+					"Content-Type": `application/vnd.google.protobuf; proto=io.prometheus.client.MetricFamily; encoding=delimited; escaping=underscores`,
 				},
 				body: externalMetricFamilyAsBytes,
 			},
@@ -453,7 +454,7 @@ collected metric "broken_metric" { label:<name:"foo" value:"bar" > label:<name:"
 			},
 			out: output{
 				headers: map[string]string{
-					"Content-Type": `application/vnd.google.protobuf; proto=io.prometheus.client.MetricFamily; encoding=delimited; escaping=values`,
+					"Content-Type": `application/vnd.google.protobuf; proto=io.prometheus.client.MetricFamily; encoding=delimited; escaping=underscores`,
 				},
 				body: bytes.Join(
 					[][]byte{
@@ -472,7 +473,7 @@ collected metric "broken_metric" { label:<name:"foo" value:"bar" > label:<name:"
 			},
 			out: output{
 				headers: map[string]string{
-					"Content-Type": `text/plain; version=0.0.4; charset=utf-8; escaping=values`,
+					"Content-Type": `text/plain; version=0.0.4; charset=utf-8; escaping=underscores`,
 				},
 				body: []byte{},
 			},
@@ -483,7 +484,7 @@ collected metric "broken_metric" { label:<name:"foo" value:"bar" > label:<name:"
 			},
 			out: output{
 				headers: map[string]string{
-					"Content-Type": `text/plain; version=0.0.4; charset=utf-8; escaping=values`,
+					"Content-Type": `text/plain; version=0.0.4; charset=utf-8; escaping=underscores`,
 				},
 				body: expectedMetricFamilyAsText,
 			},
@@ -495,7 +496,7 @@ collected metric "broken_metric" { label:<name:"foo" value:"bar" > label:<name:"
 			},
 			out: output{
 				headers: map[string]string{
-					"Content-Type": `text/plain; version=0.0.4; charset=utf-8; escaping=values`,
+					"Content-Type": `text/plain; version=0.0.4; charset=utf-8; escaping=underscores`,
 				},
 				body: bytes.Join(
 					[][]byte{
@@ -514,7 +515,7 @@ collected metric "broken_metric" { label:<name:"foo" value:"bar" > label:<name:"
 			},
 			out: output{
 				headers: map[string]string{
-					"Content-Type": `application/vnd.google.protobuf; proto=io.prometheus.client.MetricFamily; encoding=delimited; escaping=values`,
+					"Content-Type": `application/vnd.google.protobuf; proto=io.prometheus.client.MetricFamily; encoding=delimited; escaping=underscores`,
 				},
 				body: bytes.Join(
 					[][]byte{
@@ -533,7 +534,7 @@ collected metric "broken_metric" { label:<name:"foo" value:"bar" > label:<name:"
 			},
 			out: output{
 				headers: map[string]string{
-					"Content-Type": `application/vnd.google.protobuf; proto=io.prometheus.client.MetricFamily; encoding=text; escaping=values`,
+					"Content-Type": `application/vnd.google.protobuf; proto=io.prometheus.client.MetricFamily; encoding=text; escaping=underscores`,
 				},
 				body: bytes.Join(
 					[][]byte{
@@ -552,7 +553,7 @@ collected metric "broken_metric" { label:<name:"foo" value:"bar" > label:<name:"
 			},
 			out: output{
 				headers: map[string]string{
-					"Content-Type": `application/vnd.google.protobuf; proto=io.prometheus.client.MetricFamily; encoding=compact-text; escaping=values`,
+					"Content-Type": `application/vnd.google.protobuf; proto=io.prometheus.client.MetricFamily; encoding=compact-text; escaping=underscores`,
 				},
 				body: bytes.Join(
 					[][]byte{
@@ -571,7 +572,7 @@ collected metric "broken_metric" { label:<name:"foo" value:"bar" > label:<name:"
 			},
 			out: output{
 				headers: map[string]string{
-					"Content-Type": `application/vnd.google.protobuf; proto=io.prometheus.client.MetricFamily; encoding=compact-text; escaping=values`,
+					"Content-Type": `application/vnd.google.protobuf; proto=io.prometheus.client.MetricFamily; encoding=compact-text; escaping=underscores`,
 				},
 				body: bytes.Join(
 					[][]byte{
@@ -609,7 +610,7 @@ collected metric "broken_metric" { label:<name:"foo" value:"bar" > label:<name:"
 			},
 			out: output{
 				headers: map[string]string{
-					"Content-Type": `text/plain; version=0.0.4; charset=utf-8; escaping=values`,
+					"Content-Type": `text/plain; version=0.0.4; charset=utf-8; escaping=underscores`,
 				},
 				body: expectedMetricFamilyAsText,
 			},
@@ -666,7 +667,7 @@ collected metric "broken_metric" { label:<name:"foo" value:"bar" > label:<name:"
 			},
 			out: output{
 				headers: map[string]string{
-					"Content-Type": `text/plain; version=0.0.4; charset=utf-8; escaping=values`,
+					"Content-Type": `text/plain; version=0.0.4; charset=utf-8; escaping=underscores`,
 				},
 				body: bytes.Join(
 					[][]byte{
@@ -713,7 +714,7 @@ collected metric "broken_metric" { label:<name:"foo" value:"bar" > label:<name:"
 		}
 		writer := httptest.NewRecorder()
 		handler := promhttp.HandlerFor(gatherer, promhttp.HandlerOpts{})
-		request, _ := http.NewRequest("GET", "/", nil)
+		request, _ := http.NewRequest(http.MethodGet, "/", nil)
 		for key, value := range scenario.headers {
 			request.Header.Add(key, value)
 		}
@@ -1282,7 +1283,7 @@ func ExampleRegistry_grouping() {
 				ConstLabels: prometheus.Labels{
 					// Generate a label unique to this worker so its metric doesn't
 					// collide with the metrics from other workers.
-					"worker_id": fmt.Sprintf("%d", workerID),
+					"worker_id": strconv.Itoa(workerID),
 				},
 			})
 			workerReg.MustRegister(workTime)

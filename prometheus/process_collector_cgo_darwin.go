@@ -3,7 +3,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+// http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -11,27 +11,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package validations
+//go:build darwin && cgo
 
-import (
-	"errors"
-	"reflect"
+package prometheus
 
-	dto "github.com/prometheus/client_model/go"
-)
+/*
+int get_memory_info(unsigned long long *rss, unsigned long long *vs);
+*/
+import "C"
+import "fmt"
 
-// LintDuplicateMetric detects duplicate metric.
-func LintDuplicateMetric(mf *dto.MetricFamily) []error {
-	var problems []error
+func getMemory() (*memoryInfo, error) {
+	var rss, vsize C.ulonglong
 
-	for i, m := range mf.Metric {
-		for _, k := range mf.Metric[i+1:] {
-			if reflect.DeepEqual(m.Label, k.Label) {
-				problems = append(problems, errors.New("metric not unique"))
-				break
-			}
-		}
+	if err := C.get_memory_info(&rss, &vsize); err != 0 {
+		return nil, fmt.Errorf("task_info() failed with 0x%x", int(err))
 	}
 
-	return problems
+	return &memoryInfo{vsize: uint64(vsize), rss: uint64(rss)}, nil
 }

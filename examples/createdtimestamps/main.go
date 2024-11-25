@@ -11,20 +11,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// A simple example of how to record a latency metric with exemplars, using a fictional id
-// as a prometheus label.
+// A simple example of how to exposed created timestamps in OpenMetrics format.
 
 package main
 
 import (
 	"log"
-	"math/rand"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -37,11 +33,7 @@ func main() {
 
 	// Create non-global registry.
 	registry := prometheus.NewRegistry()
-
-	// Add go runtime metrics and process collectors.
 	registry.MustRegister(
-		collectors.NewGoCollector(),
-		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
 		requestDurations,
 	)
 
@@ -49,9 +41,7 @@ func main() {
 		for {
 			// Record fictional latency.
 			now := time.Now()
-			requestDurations.(prometheus.ExemplarObserver).ObserveWithExemplar(
-				time.Since(now).Seconds(), prometheus.Labels{"dummyID": strconv.Itoa(rand.Intn(100000))},
-			)
+			requestDurations.Observe(time.Since(now).Seconds())
 			time.Sleep(600 * time.Millisecond)
 		}
 	}()
@@ -61,7 +51,8 @@ func main() {
 		"/metrics", promhttp.HandlerFor(
 			registry,
 			promhttp.HandlerOpts{
-				EnableOpenMetrics: true,
+				EnableOpenMetrics:                   true,
+				EnableOpenMetricsTextCreatedSamples: true,
 			}),
 	)
 	// To test: curl -H 'Accept: application/openmetrics-text' localhost:8080/metrics

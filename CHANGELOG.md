@@ -1,5 +1,17 @@
 ## Unreleased
 
+## 1.20.5 / 2024-10-15
+
+* [BUGFIX] testutil: Reverted #1424; functions using compareMetricFamilies are (again) only failing if filtered metricNames are in the expected input.
+
+## 1.20.4 / 2024-09-07
+
+* [BUGFIX] histograms: Fix possible data race when appending exemplars vs metrics gather. #1623
+
+## 1.20.3 / 2024-09-05
+
+* [BUGFIX] histograms: Fix possible data race when appending exemplars. #1608
+
 ## 1.20.2 / 2024-08-23
 
 * [BUGFIX] promhttp: Unset Content-Encoding header when data is uncompressed. #1596
@@ -22,7 +34,7 @@
 * [FEATURE] promlint: Add duplicated metric lint rule. #1472
 * [BUGFIX] promlint: Relax metric type in name linter rule. #1455
 * [BUGFIX] promhttp: Make sure server instrumentation wrapping supports new and future extra responseWriter methods. #1480
-* [BUGFIX] testutil: Functions using compareMetricFamilies are now failing if filtered metricNames are not in the input. #1424
+* [BUGFIX] **breaking** testutil: Functions using compareMetricFamilies are now failing if filtered metricNames are not in the input. #1424 (reverted in 1.20.5)
 
 ## 1.19.0 / 2024-02-27
 
